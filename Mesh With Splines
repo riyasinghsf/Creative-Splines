@@ -1,0 +1,68 @@
+using UnityEngine;
+
+public class meshwithsplines : MonoBehaviour
+{
+    public Material Blueness;
+    List<List<Vector3>> thingy=new List<List<Vector3>>() { };
+    public splines spline1;
+    public splines spline2;
+    public float steps;
+    // Start is called before the first frame update
+    void Start()
+    {
+
+        GetPointsFromSpline(steps, spline1);
+        GetPointsFromSpline(steps, spline2);
+        GenerateMeshes(0, 1);
+    }
+    void GetPointsFromSpline(float steps,splines spline)
+    {
+        List<Vector3> stuff=new List<Vector3>() { };
+        for (float i = 0; i < steps; i++)
+        {
+            int j;
+            float w = i/steps * spline.CurveCount;
+            j = (int)w;
+             float x = w-j;
+             j *= 3;
+            Vector3 wow=transform.TransformPoint(Bezier.GetPoint(
+                spline.points[j], spline.points[j + 1], spline.points[j + 2], spline.points[j + 3], x));
+            stuff.Add(wow);
+        }
+        thingy.Add(stuff);
+    }
+    void GenerateMeshes(int index1,int index2) {
+        Mesh mesh = new Mesh();
+        List<Vector3> vertices = new List<Vector3>() { }; ;
+        List<int> triangles = new List<int>() { };
+        for(int i = 0; i < steps - 1; i++)
+        {
+            vertices.Add(thingy[index1][i]);
+            vertices.Add(thingy[index1][i+1]);
+            vertices.Add(thingy[index2][i]);
+            vertices.Add(thingy[index2][i]);
+            vertices.Add(thingy[index1][i+1]);
+            vertices.Add(thingy[index2][i+1]);
+        }
+        for(int i = 0; i < 6 * (steps - 1); i++)
+        {
+            triangles.Add(i);
+        }
+        UpdateMesh(mesh, vertices, triangles);
+        GameObject gameObject = new GameObject("Mesh", typeof(MeshFilter), typeof(MeshRenderer));
+        gameObject.GetComponent<MeshFilter>().mesh = mesh;
+        gameObject.GetComponent<MeshRenderer>().material = Blueness;
+    }
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+    void UpdateMesh(Mesh mesh,List<Vector3> vertices,List<int> triangles)
+    {
+        mesh.Clear();
+        mesh.vertices = vertices.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.RecalculateNormals();
+    }
+}
